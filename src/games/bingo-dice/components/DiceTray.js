@@ -35,8 +35,19 @@ export default class DiceTray extends Phaser.GameObjects.Container {
     scene.add.existing(this);
   }
 
+  /** Show the two-digit number the dice form, on the left of the tray */
+  showNumber() {
+    const tens  = this._dice[0]?.face ?? 0;
+    const units = this._dice[1]?.face ?? 0;
+    this._numberLabel.setText(`${tens}${units}`);
+    this._numberCircle.setAlpha(1);
+    this._numberLabel.setAlpha(1);
+  }
+
   /** Roll non-held dice with new random faces */
   roll() {
+    this._numberCircle.setAlpha(0);
+    this._numberLabel.setAlpha(0);
     const cy = this._trayHeight / 2 - 12;
     const bounceHeight = 60;
 
@@ -90,6 +101,8 @@ export default class DiceTray extends Phaser.GameObjects.Container {
    * Releases all holds after animation.
    */
   flyTo(worldX, worldY, onComplete) {
+    this._numberCircle.setAlpha(0);
+    this._numberLabel.setAlpha(0);
     const localX = worldX - this.x - this._diceContainer.x;
     const localY = worldY - this.y - this._diceContainer.y;
     let completed = 0;
@@ -138,6 +151,22 @@ export default class DiceTray extends Phaser.GameObjects.Container {
       this._diceContainer.add(die);
       this._dice.push(die);
     }
+
+    // Number display — pinned to left edge of tray
+    const circleRadius = Math.round(this._trayHeight * 0.28);
+    const labelX = circleRadius + 6;
+    this._numberCircle = this.scene.add.circle(labelX, cy, circleRadius, 0x3a1200)
+      .setStrokeStyle(2, 0x7a3500)
+      .setAlpha(0);
+    this.add(this._numberCircle);
+
+    this._numberLabel = this.scene.add.text(labelX, cy, '', {
+      fontSize:   `${Math.round(this._trayHeight * 0.26)}px`,
+      fontStyle:  'bold',
+      fontFamily: 'DynaPuff, Arial, sans-serif',
+      color:      '#ffffff',
+    }).setOrigin(0.5).setAlpha(0);
+    this.add(this._numberLabel);
   }
 
   /** Update tray width on browser resize and reflow dice */
@@ -155,6 +184,10 @@ export default class DiceTray extends Phaser.GameObjects.Container {
       die.x = startX + i * step;
       die.y = cy;
     });
+    if (this._numberLabel) {
+      this._numberCircle.y = cy;
+      this._numberLabel.y = cy;
+    }
   }
 
   _animateToPositions() {
@@ -243,6 +276,7 @@ export default class DiceTray extends Phaser.GameObjects.Container {
         }
 
         this._animateToPositions();
+        this.showNumber();
 
         if (this._onSelectionChange) {
           this._onSelectionChange(this.selectedValues, this.values);

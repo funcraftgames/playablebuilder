@@ -1,8 +1,9 @@
-import '../styles/main.css';
-import MainButton from '../components/MainButton.js';
-import DiceTray from '../components/DiceTray.js';
-import ScoreBoard from '../components/ScoreBoard.js';
-import GemShopPopup from '../components/GemShopPopup.js';
+import './styles/game.css';
+import MainButton from './components/MainButton.js';
+import DiceTray from './components/DiceTray.js';
+import ScoreBoard from './components/ScoreBoard.js';
+import GemShopPopup from './components/GemShopPopup.js';
+import letterTrayBgUrl from './assets/LetterTrayBackground.png';
 
 const css = getComputedStyle(document.documentElement);
 const colorTitle    = css.getPropertyValue('--color-title').trim();
@@ -15,7 +16,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image('letterTrayBackground', '/assets/LetterTrayBackground.png');
+    this.load.image('letterTrayBackground', letterTrayBgUrl);
   }
 
   create() {
@@ -71,6 +72,8 @@ export default class GameScene extends Phaser.Scene {
         this.scoreBoard.updateAvailable(this.diceTray.values);
       });
     });
+
+    window.dispatchEvent(new Event('__gameReady'));
   }
 
   _updateRollButton() {

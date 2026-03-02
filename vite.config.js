@@ -11,10 +11,17 @@ const scssFullReload = {
 };
 
 export default defineConfig({
-  base: './',
+  base: '/',
   plugins: [scssFullReload],
   build: {
     outDir: 'dist',
+    rollupOptions: {
+      input: {
+        main:        'index.html',
+        'bingo-dice': 'bingo-dice.html',
+        'dice-yatzy': 'dice-yatzy.html',
+      },
+    },
   },
   server: {
     port: 3000,

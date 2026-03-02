@@ -1,12 +1,11 @@
 import Phaser from 'phaser';
-import GameScene2 from './scenes/GameScene2.js';
-import './styles/main2.css';
+import GameScene from './GameScene.js';
+import './styles/game.css';
 
 const MAX_TAPS = 0;       // redirect to store after this many taps
-const GAME_FIXED = true;   // when true, dice always roll a matchable board value
 
-const appleStoreUrl = 'https://apps.apple.com/us/app/bingo-dice/id6747049399';
-const googlePlayUrl = 'https://play.google.com/store/apps/details?id=com.funcraft.bingodice';
+const appleStoreUrl  = 'https://apps.apple.com/app/id0000000000';
+const googlePlayUrl  = 'https://play.google.com/store/apps/details?id=com.funcraft.diceyatzy';
 
 function getStoreUrl() {
   return /android/i.test(navigator.userAgent) ? googlePlayUrl : appleStoreUrl;
@@ -44,7 +43,6 @@ function stopTapCounter() {
   }
 }
 
-// Expose so GameScene2 can call it (bingo path — 0 taps needed)
 window.__openStore = () => {
   stopTapCounter();
   openStore();
@@ -53,7 +51,7 @@ window.__openStore = () => {
 function createLoader() {
   const el = document.createElement('div');
   el.style.cssText =
-    'position:fixed;inset:0;background:#1a0230;display:flex;' +
+    'position:fixed;inset:0;background:#056037;display:flex;' +
     'align-items:center;justify-content:center;z-index:9999;' +
     'transition:opacity 0.35s ease;';
   el.innerHTML =
@@ -73,7 +71,7 @@ function hideLoader(el) {
 
 function showFallback() {
   document.body.style.cssText =
-    'margin:0;background:#30053c;display:flex;align-items:center;' +
+    'margin:0;background:#056037;display:flex;align-items:center;' +
     'justify-content:center;height:100vh;cursor:pointer;';
   document.body.innerHTML =
     '<div style="color:#fff;font-size:28px;text-align:center;' +
@@ -88,7 +86,7 @@ async function startGame() {
   await document.fonts.load('700 30px DynaPuff').catch(() => {});
 
   const css = getComputedStyle(document.documentElement);
-  const bgColor = css.getPropertyValue('--game-bg-color').trim() || '#1a0230';
+  const bgColor = css.getPropertyValue('--game-bg-color').trim() || '#056037';
 
   const config = {
     type: Phaser.AUTO,
@@ -102,7 +100,7 @@ async function startGame() {
       default: 'arcade',
       arcade: { debug: false },
     },
-    scene: [GameScene2],
+    scene: [GameScene],
     callbacks: {
       postBoot(game) {
         if (game.canvas) {
@@ -118,7 +116,6 @@ async function startGame() {
   window.addEventListener('__gameReady', () => hideLoader(loader), { once: true });
 
   try {
-    window.__gameFixed = GAME_FIXED;
     new Phaser.Game(config);
     startTapCounter();
   } catch (e) {

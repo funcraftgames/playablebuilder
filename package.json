@@ -4,10 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "vite",
+    "dev": "echo 'Use a game-specific script: npm run dev:bingo-dice  |  npm run dev:dice-yatzy' && exit 1",
     "build": "vite build",
-    "preview": "vite preview",
-    "build:ad": "node build-ad.mjs"
+    "build:ad": "echo 'Specify a game: npm run build:ad:bingo-dice  |  npm run build:ad:dice-yatzy' && exit 1",
+    "dev:bingo-dice": "vite --open /bingo-dice.html",
+    "build:ad:bingo-dice": "node build-ad.mjs bingo-dice",
+    "dev:dice-yatzy": "vite --open /dice-yatzy.html",
+    "build:ad:dice-yatzy": "node build-ad.mjs dice-yatzy"
   },
   "keywords": [],
   "author": "",

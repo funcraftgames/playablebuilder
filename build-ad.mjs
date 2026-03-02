@@ -1,21 +1,32 @@
 /**
- * build-ad.mjs
- * Builds a self-contained single-HTML playable ad.
+ * build-ad.mjs  <game-name>
+ * Builds a self-contained single-HTML playable ad for the given game.
+ *
+ * Usage:  node build-ad.mjs bingo-dice
+ * Output: ads/bingo-dice.html
  *
  * Steps:
- *   1. Run `vite build --config vite.config.ad.js`
+ *   1. Run `vite build --config vite.config.ad.js` with GAME env var
  *   2. Read the output HTML
  *   3. Download Google Fonts referenced in the inlined CSS and embed as base64
- *   4. Write the final ad.html to the project root
+ *   4. Replace window.top references
+ *   5. Write the final HTML to ads/<game>.html
  */
 
 import { execSync } from 'child_process';
-import { readFileSync, writeFileSync } from 'fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
-const OUT_DIR = 'dist-ad';
-const OUT_FILE = join(OUT_DIR, 'index.html');
-const FINAL_FILE = 'ad.html';
+const GAME = process.argv[2];
+if (!GAME) {
+  console.error('Usage: node build-ad.mjs <game-name>  (e.g. node build-ad.mjs bingo-dice)');
+  process.exit(1);
+}
+
+const OUT_DIR   = 'dist-ad';
+const OUT_FILE  = join(OUT_DIR, 'index.html');
+const ADS_DIR   = 'ads';
+const FINAL_FILE = join(ADS_DIR, `${GAME}.html`);
 
 // Chrome UA so Google Fonts returns WOFF2 format
 const BROWSER_UA =
@@ -76,15 +87,31 @@ async function inlineGoogleFonts(html) {
   return html;
 }
 
+/**
+ * Replace window.top with window so ad validators don't flag it.
+ * Phaser uses window.top for input listeners but falls back safely when
+ * running inside an iframe — replacing with window is equivalent at top level.
+ */
+function removeWindowTop(html) {
+  const before = (html.match(/window\.top/g) ?? []).length;
+  const result = html.replaceAll('window.top', 'window');
+  console.log(`  Replaced ${before} occurrence(s) of window.top → window`);
+  return result;
+}
+
 // ── Main ─────────────────────────────────────────────────────────────────────
 
-console.log('▶ Building ad with Vite...');
-execSync('npx vite build --config vite.config.ad.js', { stdio: 'inherit' });
+console.log(`▶ Building ad for "${GAME}" with Vite...`);
+execSync(`GAME=${GAME} npx vite build --config vite.config.ad.js`, { stdio: 'inherit' });
 
 console.log('\n▶ Post-processing: inlining Google Fonts...');
 let html = readFileSync(OUT_FILE, 'utf-8');
 html = await inlineGoogleFonts(html);
 
+console.log('\n▶ Post-processing: removing window.top references...');
+html = removeWindowTop(html);
+
+mkdirSync(ADS_DIR, { recursive: true });
 writeFileSync(FINAL_FILE, html, 'utf-8');
 const sizeKb = (Buffer.byteLength(html, 'utf-8') / 1024).toFixed(1);
 console.log(`\n✓ Ad written to ${FINAL_FILE} (${sizeKb} KB)`);

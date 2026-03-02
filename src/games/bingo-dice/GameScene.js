@@ -1,9 +1,9 @@
-import '../styles/main2.css';
-import MainButton from '../components/MainButton.js';
-import DiceTray from '../components/DiceTray.js';
-import ScoreBoard2 from '../components/ScoreBoard2.js';
-import bingoDiceLogoUrl from '../assets/BingoDiceLogo.png';
-import letterTrayBgUrl from '../assets/LetterTrayBackground.png';
+import './styles/game.css';
+import MainButton from './components/MainButton.js';
+import DiceTray from './components/DiceTray.js';
+import ScoreBoard2 from './components/ScoreBoard.js';
+import bingoDiceLogoUrl from './assets/BingoDiceLogo.png';
+import letterTrayBgUrl from './assets/LetterTrayBackground.png';
 
 const BASE_BOARD_SIZE = 300; // board is built at this size, then scaled
 const TRAY_HEIGHT = 100;
@@ -81,6 +81,7 @@ export default class GameScene2 extends Phaser.Scene {
 
     this.time.delayedCall(800, () => {
       this.scoreBoard.highlight(this.diceTray.values);
+      this.diceTray.showNumber();
     });
   }
 
