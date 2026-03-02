@@ -56,6 +56,9 @@ export default class GameScene2 extends Phaser.Scene {
 
     this._rollCount = 0;
 
+    // Signal preloader to hide
+    window.dispatchEvent(new Event('__gameReady'));
+
     // Auto-roll on start
     this._doRoll();
   }

@@ -50,6 +50,27 @@ window.__openStore = () => {
   openStore();
 };
 
+function createLoader() {
+  const el = document.createElement('div');
+  el.style.cssText =
+    'position:fixed;inset:0;background:#1a0230;display:flex;' +
+    'align-items:center;justify-content:center;z-index:9999;' +
+    'transition:opacity 0.35s ease;';
+  el.innerHTML =
+    '<style>@keyframes __spin{to{transform:rotate(360deg)}}</style>' +
+    '<div style="width:52px;height:52px;border-radius:50%;' +
+    'border:5px solid rgba(255,255,255,0.15);' +
+    'border-top-color:#ffffff;' +
+    'animation:__spin 0.75s linear infinite;"></div>';
+  document.body.appendChild(el);
+  return el;
+}
+
+function hideLoader(el) {
+  el.style.opacity = '0';
+  el.addEventListener('transitionend', () => el.remove(), { once: true });
+}
+
 function showFallback() {
   document.body.style.cssText =
     'margin:0;background:#30053c;display:flex;align-items:center;' +
@@ -61,10 +82,13 @@ function showFallback() {
 }
 
 async function startGame() {
+  const loader = createLoader();
+
   await document.fonts.ready;
+  await document.fonts.load('700 30px DynaPuff').catch(() => {});
 
   const css = getComputedStyle(document.documentElement);
-  const bgColor = css.getPropertyValue('--game-bg-color').trim() || '#30053c';
+  const bgColor = css.getPropertyValue('--game-bg-color').trim() || '#1a0230';
 
   const config = {
     type: Phaser.AUTO,
@@ -91,11 +115,14 @@ async function startGame() {
     },
   };
 
+  window.addEventListener('__gameReady', () => hideLoader(loader), { once: true });
+
   try {
     window.__gameFixed = GAME_FIXED;
     new Phaser.Game(config);
     startTapCounter();
   } catch (e) {
+    loader.remove();
     showFallback();
   }
 }
