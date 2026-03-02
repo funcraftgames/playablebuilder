@@ -15,34 +15,51 @@ export default class Dice extends Phaser.GameObjects.Container {
    * @param {number} size - Die width/height in px
    * @param {number} [face] - 1–6, random if omitted
    */
-  constructor(scene, x, y, size, face) {
+  constructor(scene, x, y, size, face, onToggle, autoHold = true) {
     super(scene, x, y);
 
     this._size = size;
     this._face = face ?? Phaser.Math.Between(1, 6);
     this._held = false;
+    this._onToggle = onToggle ?? null;
 
     this._gfx = scene.add.graphics();
     this.add(this._gfx);
+
+    const badgeX = size * 0.5;
+    const badgeY = -size * 0.5;
+    const badgeR = size * 0.2;
+
+    this._lockBg = scene.add.circle(badgeX, badgeY, badgeR, 0xffcc00)
+      .setVisible(false);
+    this.add(this._lockBg);
+
+    this._lockIcon = scene.add.text(badgeX, badgeY, '🔒', {
+      fontSize: `${Math.round(size * 0.24)}px`,
+    }).setOrigin(0.5, 0.5).setTint(0x000000).setPadding(2, 2, 2, 0).setVisible(false);
+    this.add(this._lockIcon);
+
     this._redraw();
 
-    // Hit zone for tap-to-hold
     const hitZone = scene.add
       .zone(0, 0, size, size)
       .setInteractive({ useHandCursor: true });
-    hitZone.on('pointerdown', () => this.toggleHold());
+    if (autoHold) hitZone.on('pointerdown', () => this.toggleHold());
     this.add(hitZone);
+    this._hitZone = hitZone;
 
     scene.add.existing(this);
   }
 
   get face() { return this._face; }
   get held() { return this._held; }
+  get hitZone() { return this._hitZone; }
 
   /** Toggle held state and redraw */
   toggleHold() {
     this._held = !this._held;
     this._redraw();
+    if (this._onToggle) this._onToggle();
   }
 
   /** Release hold without toggling */
@@ -56,6 +73,12 @@ export default class Dice extends Phaser.GameObjects.Container {
   /** Pick a new random face and redraw */
   reroll() {
     this._face = Phaser.Math.Between(1, 6);
+    this._redraw();
+  }
+
+  /** Set a specific face value (1–6) and redraw */
+  setFace(value) {
+    this._face = value;
     this._redraw();
   }
 
@@ -89,6 +112,11 @@ export default class Dice extends Phaser.GameObjects.Container {
     g.fillStyle(0x222222, 1);
     for (const [dx, dy] of PIP_POSITIONS[this._face]) {
       g.fillCircle(dx * offset, dy * offset, pipRadius);
+    }
+
+    if (this._lockIcon) {
+      this._lockBg.setVisible(this._held);
+      this._lockIcon.setVisible(this._held);
     }
   }
 }
