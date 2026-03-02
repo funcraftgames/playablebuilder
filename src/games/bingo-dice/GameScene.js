@@ -2,6 +2,7 @@ import './styles/game.css';
 import MainButton from './components/MainButton.js';
 import DiceTray from './components/DiceTray.js';
 import ScoreBoard2 from './components/ScoreBoard.js';
+import { getSafeArea } from '../shared/safeArea.js';
 import bingoDiceLogoUrl from './assets/BingoDiceLogo.png';
 import letterTrayBgUrl from './assets/LetterTrayBackground.png';
 
@@ -93,9 +94,10 @@ export default class GameScene2 extends Phaser.Scene {
 
   _layout() {
     const { width, height } = this.scale;
+    const safe = getSafeArea();
     this._drawBg(width, height);
     const pad   = 10;
-    const trayY = height - BTN_MARGIN - TRAY_HEIGHT;
+    const trayY = height - BTN_MARGIN - TRAY_HEIGHT - safe.bottom;
 
     // ── Header logo ─────────────────────────────────────────────────────────
     const logoNW = this._logo.width;
@@ -103,7 +105,7 @@ export default class GameScene2 extends Phaser.Scene {
     const logoAspect = logoNW / logoNH;
     const logoW = Math.min(width * 0.6, (height * 0.1) * logoAspect);
     const logoH = logoW / logoAspect;
-    this._logo.setPosition(width / 2, pad);
+    this._logo.setPosition(width / 2, pad + safe.top);
     this._logo.setDisplaySize(logoW, logoH);
 
     const headerBottom = pad + logoH + pad;
@@ -124,7 +126,7 @@ export default class GameScene2 extends Phaser.Scene {
     this.diceTray.resize(width);
 
     // ── Button ───────────────────────────────────────────────────────────────
-    this._rollBtn.setPosition(width / 2, height - BTN_MARGIN / 2);
+    this._rollBtn.setPosition(width / 2, height - BTN_MARGIN / 2 - safe.bottom);
   }
 
   update() {}

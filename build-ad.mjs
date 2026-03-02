@@ -1,32 +1,26 @@
 /**
- * build-ad.mjs  <game-name>
- * Builds a self-contained single-HTML playable ad for the given game.
+ * build-ad.mjs  [game-name]
+ * Builds self-contained single-HTML playable ads into dist-ad/.
  *
- * Usage:  node build-ad.mjs bingo-dice
- * Output: ads/bingo-dice.html
+ * Usage:
+ *   node build-ad.mjs              — builds ALL games
+ *   node build-ad.mjs bingo-dice   — builds one game
  *
- * Steps:
+ * Output: dist-ad/<game>.html
+ *
+ * Steps per game:
  *   1. Run `vite build --config vite.config.ad.js` with GAME env var
- *   2. Read the output HTML
+ *   2. Read the output HTML from dist-ad/<game>.html
  *   3. Download Google Fonts referenced in the inlined CSS and embed as base64
  *   4. Replace window.top references
- *   5. Write the final HTML to ads/<game>.html
+ *   5. Overwrite dist-ad/<game>.html with the final processed HTML
  */
 
 import { execSync } from 'child_process';
-import { mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
-const GAME = process.argv[2];
-if (!GAME) {
-  console.error('Usage: node build-ad.mjs <game-name>  (e.g. node build-ad.mjs bingo-dice)');
-  process.exit(1);
-}
-
-const OUT_DIR   = 'dist-ad';
-const OUT_FILE  = join(OUT_DIR, 'index.html');
-const ADS_DIR   = 'ads';
-const FINAL_FILE = join(ADS_DIR, `${GAME}.html`);
+const OUT_DIR = 'dist-ad';
 
 // Chrome UA so Google Fonts returns WOFF2 format
 const BROWSER_UA =
@@ -51,9 +45,6 @@ async function fetchBase64(url) {
  * download each WOFF2 file, and replace with inline base64 @font-face rules.
  */
 async function inlineGoogleFonts(html) {
-  // Handles minified (@import"URL") and standard (@import url('URL')) forms.
-  // The URL can contain semicolons (e.g. in axis ranges), so we capture up to
-  // the closing quote/paren rather than stopping at ";".
   const importRe = /@import\s*(?:url\(['"]?|["'])(https:\/\/fonts\.googleapis\.com[^"')]+)['"]?\)?[^;]*;/g;
   const matches = [...html.matchAll(importRe)];
 
@@ -68,7 +59,6 @@ async function inlineGoogleFonts(html) {
 
     let fontCss = await fetchText(apiUrl, { 'User-Agent': BROWSER_UA });
 
-    // Find all WOFF2 src URLs: url(https://...) format('woff2')
     const woff2Re = /url\((['"]?)(https:\/\/[^)'"]+)\1\)\s+format\(['"]?woff2['"]?\)/g;
     const woff2Matches = [...fontCss.matchAll(woff2Re)];
 
@@ -80,7 +70,6 @@ async function inlineGoogleFonts(html) {
       fontCss = fontCss.replace(woff2Url, `data:font/woff2;base64,${base64}`);
     }
 
-    // Replace the @import with the inlined @font-face CSS
     html = html.replace(match[0], fontCss);
   }
 
@@ -89,8 +78,6 @@ async function inlineGoogleFonts(html) {
 
 /**
  * Replace window.top with window so ad validators don't flag it.
- * Phaser uses window.top for input listeners but falls back safely when
- * running inside an iframe — replacing with window is equivalent at top level.
  */
 function removeWindowTop(html) {
   const before = (html.match(/window\.top/g) ?? []).length;
@@ -99,19 +86,49 @@ function removeWindowTop(html) {
   return result;
 }
 
+/** Find all game names under src/games/ that have a main.js entry point. */
+function discoverGames() {
+  return readdirSync('src/games', { withFileTypes: true })
+    .filter(d => d.isDirectory() && existsSync(join('src/games', d.name, 'main.js')))
+    .map(d => d.name);
+}
+
+/** Build a single game and post-process dist-ad/<game>.html in place. */
+async function buildGame(game) {
+  console.log(`\n${'─'.repeat(60)}`);
+  console.log(`▶ Building ad for "${game}"...`);
+  console.log('─'.repeat(60));
+
+  execSync(`GAME=${game} npx vite build --config vite.config.ad.js`, { stdio: 'inherit' });
+
+  const outFile = join(OUT_DIR, `${game}.html`);
+
+  console.log('\n▶ Post-processing: inlining Google Fonts...');
+  let html = readFileSync(outFile, 'utf-8');
+  html = await inlineGoogleFonts(html);
+
+  console.log('\n▶ Post-processing: removing window.top references...');
+  html = removeWindowTop(html);
+
+  writeFileSync(outFile, html, 'utf-8');
+  const sizeKb = (Buffer.byteLength(html, 'utf-8') / 1024).toFixed(1);
+  console.log(`\n✓  ${outFile}  (${sizeKb} KB)`);
+}
+
 // ── Main ─────────────────────────────────────────────────────────────────────
 
-console.log(`▶ Building ad for "${GAME}" with Vite...`);
-execSync(`GAME=${GAME} npx vite build --config vite.config.ad.js`, { stdio: 'inherit' });
+const arg   = process.argv[2];
+const games = arg ? [arg] : discoverGames();
 
-console.log('\n▶ Post-processing: inlining Google Fonts...');
-let html = readFileSync(OUT_FILE, 'utf-8');
-html = await inlineGoogleFonts(html);
+if (games.length === 0) {
+  console.error('No games found in src/games/ (each game needs a main.js).');
+  process.exit(1);
+}
 
-console.log('\n▶ Post-processing: removing window.top references...');
-html = removeWindowTop(html);
+for (const game of games) {
+  await buildGame(game);
+}
 
-mkdirSync(ADS_DIR, { recursive: true });
-writeFileSync(FINAL_FILE, html, 'utf-8');
-const sizeKb = (Buffer.byteLength(html, 'utf-8') / 1024).toFixed(1);
-console.log(`\n✓ Ad written to ${FINAL_FILE} (${sizeKb} KB)`);
+console.log(`\n${'═'.repeat(60)}`);
+console.log(`✓  Done — built ${games.length} ad(s): ${games.join(', ')}`);
+console.log('═'.repeat(60));

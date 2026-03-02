@@ -2,13 +2,9 @@ import './styles/game.css';
 import MainButton from './components/MainButton.js';
 import DiceTray from './components/DiceTray.js';
 import ScoreBoard from './components/ScoreBoard.js';
-import GemShopPopup from './components/GemShopPopup.js';
 import letterTrayBgUrl from './assets/LetterTrayBackground.png';
+import { getSafeArea } from '../shared/safeArea.js';
 
-const css = getComputedStyle(document.documentElement);
-const colorTitle    = css.getPropertyValue('--color-title').trim();
-const colorSubtitle = css.getPropertyValue('--color-subtitle').trim();
-const fontFamily    = css.getPropertyValue('--font-family-game').trim();
 
 export default class GameScene extends Phaser.Scene {
   constructor() {
@@ -21,13 +17,29 @@ export default class GameScene extends Phaser.Scene {
 
   create() {
     const { width, height } = this.scale;
+    const safe = getSafeArea();
 
     const trayHeight = 100;
-    const trayY = height - 200;
+    const trayY = height - 200 - safe.bottom;
 
-    // Scoreboard — top of screen, full width two-column layout
+    // Game title
+    this.add.text(width / 2, safe.top + 28, 'DICE YATZY', {
+      fontSize: '36px',
+      fontFamily: 'MuseoSansRounded, Arial, sans-serif',
+      fontStyle: 'bold',
+      fill: '#ffcc00',
+      fillGradientType: 1,
+      fillGradientColor1: '#fff066',
+      fillGradientColor2: '#ff7700',
+      stroke: '#3d1500',
+      strokeThickness: 7,
+      shadow: { offsetX: 0, offsetY: 5, color: '#000000', blur: 0, fill: true },
+    }).setOrigin(0.5, 0.5);
+
+    // Scoreboard — scale to fit between title and dice tray
     const boardPad = 10;
-    this.scoreBoard = new ScoreBoard(this, boardPad, 10, width - boardPad * 2,
+    const boardY = safe.top + 62;
+    this.scoreBoard = new ScoreBoard(this, boardPad, boardY, width - boardPad * 2,
       (key, pts) => {
         console.log(`Scored ${key}: ${pts}`);
         // New turn — reset roll count + button
@@ -40,27 +52,24 @@ export default class GameScene extends Phaser.Scene {
       }
     );
 
+    // Scale board to fill the available vertical space, centered horizontally
+    const availH = trayY - 8 - boardY;
+    const boardScale = Math.min(1, availH / this.scoreBoard.boardHeight);
+    if (boardScale < 1) {
+      this.scoreBoard.setScale(boardScale);
+      const scaledW = this.scoreBoard.boardWidth * boardScale;
+      this.scoreBoard.setX(boardPad + ((width - boardPad * 2) - scaledW) / 2);
+    }
+
     // Dice tray with 5 dice
     this.diceTray = new DiceTray(this, 0, trayY, width, trayHeight, 'letterTrayBackground');
 
-    // Track rolls per turn (0 = not rolled yet, 1-2 = free rerolls, 3+ = gem)
+    // Track rolls per turn (0 = not rolled yet, 1-2 = free rerolls, 3 = max)
     this._rollCount = 0;
 
     // Roll button — centered below the tray
-    this._rollBtn = new MainButton(this, width / 2, height - 50, 'Roll', () => {
-      const isGem = this._rollCount >= 3;
-      if (isGem) {
-        if (this.scoreBoard.gems < 10) {
-          new GemShopPopup(
-            this,
-            (gems) => this.scoreBoard.setGems(this.scoreBoard.gems + gems),
-            null
-          );
-          return;
-        }
-        this.scoreBoard.spendGems(10);
-        this.scoreBoard.addPenalty(10);
-      }
+    this._rollBtn = new MainButton(this, width / 2, height - 50 - safe.bottom, 'Roll', () => {
+      if (this._rollCount >= 3) return;
 
       this.scoreBoard.clearPending();
       this.diceTray.roll();
@@ -73,6 +82,8 @@ export default class GameScene extends Phaser.Scene {
       });
     });
 
+    this._startRollBounce();
+
     window.dispatchEvent(new Event('__gameReady'));
   }
 
@@ -80,16 +91,35 @@ export default class GameScene extends Phaser.Scene {
     const btn = this._rollBtn;
     if (this._rollCount === 0) {
       btn.setLabel('Roll');
-      btn.setMode('normal');
+      btn.setVisible(true);
+      this._startRollBounce();
     } else if (this._rollCount === 1) {
+      this._stopRollBounce();
       btn.setLabel('Re-Roll ×2');
-      btn.setMode('normal');
     } else if (this._rollCount === 2) {
       btn.setLabel('Re-Roll ×1');
-      btn.setMode('normal');
     } else {
-      btn.setLabel('Re-Roll 💎 10');
-      btn.setMode('gem');
+      btn.setVisible(false);
+    }
+  }
+
+  _startRollBounce() {
+    this._stopRollBounce();
+    this._rollBounceTween = this.tweens.add({
+      targets: this._rollBtn,
+      scaleX: 1.1, scaleY: 1.1,
+      duration: 500,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.InOut',
+    });
+  }
+
+  _stopRollBounce() {
+    if (this._rollBounceTween) {
+      this._rollBounceTween.stop();
+      this._rollBounceTween = null;
+      this._rollBtn.setScale(1);
     }
   }
 

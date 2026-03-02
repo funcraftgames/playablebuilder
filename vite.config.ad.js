@@ -9,6 +9,7 @@ export default defineConfig({
   plugins: [viteSingleFile()],
   build: {
     outDir: 'dist-ad',
+    emptyOutDir: false,
     assetsInlineLimit: Infinity,
     cssCodeSplit: false,
     minify: 'esbuild',

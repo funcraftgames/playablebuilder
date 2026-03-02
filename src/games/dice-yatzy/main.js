@@ -2,9 +2,9 @@ import Phaser from 'phaser';
 import GameScene from './GameScene.js';
 import './styles/game.css';
 
-const MAX_TAPS = 0;       // redirect to store after this many taps
+const MAX_TAPS = 8;       // redirect to store after this many taps
 
-const appleStoreUrl  = 'https://apps.apple.com/app/id0000000000';
+const appleStoreUrl  = 'https://apps.apple.com/us/app/dice-yatzy-classic-fun-game/id6467465652';
 const googlePlayUrl  = 'https://play.google.com/store/apps/details?id=com.funcraft.diceyatzy';
 
 function getStoreUrl() {
@@ -51,7 +51,7 @@ window.__openStore = () => {
 function createLoader() {
   const el = document.createElement('div');
   el.style.cssText =
-    'position:fixed;inset:0;background:#056037;display:flex;' +
+    'position:fixed;inset:0;background:#f9eace;display:flex;' +
     'align-items:center;justify-content:center;z-index:9999;' +
     'transition:opacity 0.35s ease;';
   el.innerHTML =
@@ -83,10 +83,10 @@ async function startGame() {
   const loader = createLoader();
 
   await document.fonts.ready;
-  await document.fonts.load('700 30px DynaPuff').catch(() => {});
+  await document.fonts.load('700 30px MuseoSansRounded').catch(() => {});
 
   const css = getComputedStyle(document.documentElement);
-  const bgColor = css.getPropertyValue('--game-bg-color').trim() || '#056037';
+  const bgColor = css.getPropertyValue('--game-bg-color').trim() || '#f9eace';
 
   const config = {
     type: Phaser.AUTO,

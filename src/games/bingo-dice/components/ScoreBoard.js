@@ -99,7 +99,7 @@ export default class ScoreBoard2 extends Phaser.GameObjects.Container {
         const label = this.scene.add.text(cx, cy, isStar ? '★' : String(value), {
           fontSize: `${Math.round(cs * 0.38)}px`,
           fontStyle: 'bold',
-          fontFamily: 'DynaPuff, Arial, sans-serif',
+          fontFamily: 'MuseoSansRounded, Arial, sans-serif',
           color: isStar ? '#e38d20' : '#3c1f59',
         }).setOrigin(0.5);
         this.add(label);

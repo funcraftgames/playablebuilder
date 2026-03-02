@@ -1,9 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=DynaPuff:wght@700&display=swap');
+@import '../../shared/styles/fonts.css';
 
 :root {
-  --game-bg-color: #056037;
-  --font-family-game: 'DynaPuff', 'Arial', sans-serif;
-  --color-title: #ffffff;
+  --game-bg-color: #f9eace;
+  --font-family-game: 'MuseoSansRounded', 'Arial', sans-serif;
+  --color-title: #000000;
   --color-subtitle: #c8f5dc;
 }
 
@@ -14,7 +14,7 @@
 }
 
 body {
-  background: #000;
+  background: #f9eace;
   display: flex;
   justify-content: center;
   align-items: flex-start;

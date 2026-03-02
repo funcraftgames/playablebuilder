@@ -85,7 +85,7 @@ async function startGame() {
   const loader = createLoader();
 
   await document.fonts.ready;
-  await document.fonts.load('700 30px DynaPuff').catch(() => {});
+  await document.fonts.load('700 30px MuseoSansRounded').catch(() => {});
 
   const css = getComputedStyle(document.documentElement);
   const bgColor = css.getPropertyValue('--game-bg-color').trim() || '#1a0230';

@@ -1,8 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=DynaPuff:wght@700&display=swap');
+@import '../../shared/styles/fonts.css';
 
 :root {
   --game-bg-color: #1a0230;
-  --font-family-game: 'DynaPuff', sans-serif;
+  --font-family-game: 'MuseoSansRounded', sans-serif;
 }
 
 * {

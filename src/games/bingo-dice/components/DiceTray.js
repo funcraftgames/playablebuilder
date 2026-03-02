@@ -163,7 +163,7 @@ export default class DiceTray extends Phaser.GameObjects.Container {
     this._numberLabel = this.scene.add.text(labelX, cy, '', {
       fontSize:   `${Math.round(this._trayHeight * 0.26)}px`,
       fontStyle:  'bold',
-      fontFamily: 'DynaPuff, Arial, sans-serif',
+      fontFamily: 'MuseoSansRounded, Arial, sans-serif',
       color:      '#ffffff',
     }).setOrigin(0.5).setAlpha(0);
     this.add(this._numberLabel);

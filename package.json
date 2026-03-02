@@ -4,12 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "echo 'Use a game-specific script: npm run dev:bingo-dice  |  npm run dev:dice-yatzy' && exit 1",
+    "dev": "vite",
     "build": "vite build",
-    "build:ad": "echo 'Specify a game: npm run build:ad:bingo-dice  |  npm run build:ad:dice-yatzy' && exit 1",
-    "dev:bingo-dice": "vite --open /bingo-dice.html",
+    "build:ad": "node build-ad.mjs",
+    "dev:bingo-dice": "node set-index.mjs bingo-dice && vite",
     "build:ad:bingo-dice": "node build-ad.mjs bingo-dice",
-    "dev:dice-yatzy": "vite --open /dice-yatzy.html",
+    "dev:dice-yatzy": "node set-index.mjs dice-yatzy && vite",
     "build:ad:dice-yatzy": "node build-ad.mjs dice-yatzy"
   },
   "keywords": [],

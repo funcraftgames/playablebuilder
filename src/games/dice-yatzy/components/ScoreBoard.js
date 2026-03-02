@@ -1,7 +1,4 @@
 
-import GemCounter from './GemCounter.js';
-import GemShopPopup from './GemShopPopup.js';
-
 const CATEGORIES = [
   // Upper section
   { key: 'ones',          label: 'Ones',            section: 'upper' },
@@ -25,42 +22,51 @@ const CATEGORIES = [
 
 const STYLE = {
   playerHeaderHeight:  84,
-  playerHeaderBg:      '#082a18',
-  playerAvatarRadius:  26,
-  playerAvatarColor:   '#ff9500',
-  playerAvatarBorder:  '#ffcc44',
-  playerNameFontSize:  '17px',
+  playerHeaderBg:      '#5c2800',
   playerScoreFontSize: '32px',
   rowHeight:      44,
   rowPadding:     4,
   labelFontSize:  '16px',
   scoreFontSize:  '16px',
-  fontFamily:     'DynaPuff, Arial, sans-serif',
-  bgColor:        '#1a3a2a',
-  bgAlpha:        0.92,
-  rowColorEven:   '#1e4a34',
-  rowColorOdd:    '#163020',
-  rowColorBonus:  '#2a4a10',
-  headerColor:    '#0d2a1a',
-  dividerColor:   '#3a6a4a',
-  textColor:      '#e8f5e0',
-  textDim:        '#7aaa88',
-  btnColor:       '#4a9a50',
-  btnHover:       '#6aba60',
-  btnScored:      '#2a5a30',
-  btnBorderColor: '#70cc70',
-  btnZero:        '#666666',
-  btnZeroHover:   '#888888',
-  btnPoints:      '#ffae00',
-  btnPointsHover: '#ff8822',  
-  btnPointsShadow:'#7a3800',
-  btnShadowOffset: 5,  
+  fontFamily:     'MuseoSansRounded, Arial, sans-serif',
+  bgColor:        '#ffffff',
+  bgAlpha:        1,
+  bgShadowColor:  '#00000030',
+  bgBorderColor:  '#cccccc',
+  rowColorEven:   '#f5f5f5',
+  rowColorOdd:    '#e8e8e8',
+  rowColorBonus:  '#ffd200',
+  headerColor:    '#444444',
+  dividerColor:   '#bbbbbb',
+  textColor:      '#000000',
+  textDim:        '#888888',
+  btnColor:       '#eeeeee',
+  btnHover:       '#e0e0e0',
+  btnScored:      '#aaaaaa',
+  btnBorderColor: '#888888',
+  btnZero:        '#bbbbbb',
+  btnZeroHover:   '#999999',
+  btnPoints:      '#49bf69',
+  btnPointsHover: '#64c180',
+  btnPointsShadow:'#008300',
+  btnShadowOffset: 5,
   btnWidth:       70,
   btnHeight:      28,
   btnRadius:      6,
 };
 
 const toHex = (str) => parseInt(str.replace('#', ''), 16);
+
+const DICE_FACE = { ones: 1, twos: 2, threes: 3, fours: 4, fives: 5, sixes: 6 };
+
+const PIP_POSITIONS = {
+  1: [[0, 0]],
+  2: [[-1, -1], [1, 1]],
+  3: [[-1, -1], [0, 0], [1, 1]],
+  4: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+  5: [[-1, -1], [1, -1], [0, 0], [-1, 1], [1, 1]],
+  6: [[-1, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [1, 1]],
+};
 
 export default class ScoreBoard extends Phaser.GameObjects.Container {
   /**
@@ -80,7 +86,6 @@ export default class ScoreBoard extends Phaser.GameObjects.Container {
     this._pending = {};     // key -> available points (from dice)
     this._playerName = playerName;
     this._headerOffset = STYLE.playerHeaderHeight;
-    this._penalty = 0;
 
     const upperCats = CATEGORIES.filter(c => c.section === 'upper');
     const lowerCats = CATEGORIES.filter(c => c.section === 'lower');
@@ -112,40 +117,28 @@ export default class ScoreBoard extends Phaser.GameObjects.Container {
     this._refreshRows(exceptKey);
   }
 
-  /** Set gem count directly */
-  setGems(n) {
-    if (this._gemCounter) this._gemCounter.setGems(n);
-  }
-
-  /** Spend gems (returns remaining) */
-  spendGems(amount) {
-    if (this._gemCounter) return this._gemCounter.spend(amount);
-    return 0;
-  }
-
-  get gems() {
-    return this._gemCounter ? this._gemCounter.gems : 0;
-  }
-
-  /** Deduct points (e.g. gem re-roll cost) */
-  addPenalty(amount) {
-    this._penalty += amount;
-    this._updateScoreDisplay();
-  }
-
   get totalScore() {
-    return Math.max(0, Object.values(this._scores).reduce((a, b) => a + b, 0) - this._penalty);
+    return Object.values(this._scores).reduce((a, b) => a + b, 0);
   }
+
+  get boardHeight() { return this._totalHeight; }
+  get boardWidth()  { return this._width; }
 
   // ─── Private ─────────────────────────────────────────────────────────────
 
   _buildBoard() {
     const colW = this._width / 2;
 
-    // Panel background
+    // Panel drop shadow (vertical offset)
     const bg = this.scene.add.graphics();
+    bg.fillStyle(0x000000, 0.15);
+    bg.fillRoundedRect(0, 8, this._width, this._totalHeight, 10);
+    // Panel background
     bg.fillStyle(toHex(STYLE.bgColor), STYLE.bgAlpha);
     bg.fillRoundedRect(0, 0, this._width, this._totalHeight, 10);
+    // Panel stroke
+    bg.lineStyle(1.5, toHex(STYLE.bgBorderColor), 1);
+    bg.strokeRoundedRect(0, 0, this._width, this._totalHeight, 10);
     // Vertical column divider (below header)
     bg.lineStyle(1, toHex(STYLE.dividerColor), 0.8);
     bg.lineBetween(colW, this._headerOffset, colW, this._totalHeight);
@@ -184,20 +177,27 @@ export default class ScoreBoard extends Phaser.GameObjects.Container {
         rowBg.fillRect(offsetX, rowY, colW, STYLE.rowHeight);
         this.add(rowBg);
 
-        // Category label
-        const lText = this.scene.add.text(offsetX + 8, rowY + STYLE.rowHeight / 2, cat.label, {
-          fontSize: STYLE.labelFontSize,
-          color: STYLE.textColor,
-          fontFamily: STYLE.fontFamily,
-        }).setOrigin(0, 0.5);
-        this.add(lText);
+        // Category label — dice icon for upper number rows, text for everything else
+        if (DICE_FACE[cat.key] !== undefined) {
+          const dieSize = 28;
+          const dieGfx = this.scene.add.graphics();
+          this._drawDiceFace(dieGfx, offsetX + 8 + dieSize / 2, rowY + STYLE.rowHeight / 2, dieSize, DICE_FACE[cat.key]);
+          this.add(dieGfx);
+        } else {
+          const lText = this.scene.add.text(offsetX + 8, rowY + STYLE.rowHeight / 2, cat.label, {
+            fontSize: STYLE.labelFontSize,
+            color: STYLE.textColor,
+            fontFamily: STYLE.fontFamily,
+          }).setOrigin(0, 0.5);
+          this.add(lText);
+        }
 
         if (!cat.bonus) {
           const btnX = offsetX + colW - STYLE.btnWidth / 2 - 6;
           const btnY = rowY + STYLE.rowHeight / 2;
 
           const btnGfx = this.scene.add.graphics();
-          const btnLabel = this.scene.add.text(btnX, btnY, '--', {
+          const btnLabel = this.scene.add.text(btnX, btnY, '', {
             fontSize: STYLE.scoreFontSize,
             color: STYLE.textColor,
             fontFamily: STYLE.fontFamily,
@@ -254,9 +254,9 @@ export default class ScoreBoard extends Phaser.GameObjects.Container {
           this._bonusLabel = this.scene.add.text(
             offsetX + colW - STYLE.btnWidth / 2 - 6,
             rowY + STYLE.rowHeight / 2,
-            '--', {
+            '0/63', {
               fontSize: STYLE.scoreFontSize,
-              color: '#ffffff',
+              color: STYLE.textColor,
               fontFamily: STYLE.fontFamily,
               fontStyle: 'bold',
             }
@@ -271,8 +271,6 @@ export default class ScoreBoard extends Phaser.GameObjects.Container {
 
   _buildPlayerHeader() {
     const h = STYLE.playerHeaderHeight;
-    const r = STYLE.playerAvatarRadius;
-    const cx = r + 14;
     const cy = h / 2;
 
     // Header background
@@ -283,55 +281,25 @@ export default class ScoreBoard extends Phaser.GameObjects.Container {
     hdrBg.lineBetween(0, h, this._width, h);
     this.add(hdrBg);
 
-    // Avatar circle
-    const avatarGfx = this.scene.add.graphics();
-    avatarGfx.fillStyle(toHex(STYLE.playerAvatarColor), 1);
-    avatarGfx.fillCircle(cx, cy, r);
-    avatarGfx.lineStyle(2, toHex(STYLE.playerAvatarBorder), 1);
-    avatarGfx.strokeCircle(cx, cy, r);
-    this.add(avatarGfx);
-
-    // Initials
-    const initials = this._playerName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-    const initialsText = this.scene.add.text(cx, cy, initials, {
-      fontSize: '18px',
+    // "SCORE" label centered
+    const scoreLabel = this.scene.add.text(this._width / 2, cy - 14, 'SCORE', {
+      fontSize: '13px',
       color: '#ffffff',
       fontFamily: STYLE.fontFamily,
       fontStyle: 'bold',
-      stroke: '#000000',
-      strokeThickness: 2,
-    }).setOrigin(0.5);
-    this.add(initialsText);
+    }).setOrigin(0.5, 0.5);
+    this.add(scoreLabel);
 
-    // Player name (shifted up to make room for gems)
-    const nameX = cx + r + 12;
-    const nameText = this.scene.add.text(nameX, cy - 12, this._playerName, {
-      fontSize: STYLE.playerNameFontSize,
-      color: STYLE.textColor,
-      fontFamily: STYLE.fontFamily,
-      fontStyle: 'bold',
-    }).setOrigin(0, 0.5);
-    this.add(nameText);
-
-    // Gem counter below name
-    this._gemCounter = new GemCounter(this.scene, nameX, cy + 14, 20);
-    this.add(this._gemCounter);
-    // Show gem shop on click
-    this._gemCounter.setInteractive(new Phaser.Geom.Rectangle(0, -10, 60, 28), Phaser.Geom.Rectangle.Contains);
-    this._gemCounter.on('pointerdown', () => {
-      new GemShopPopup(this.scene, (gems) => this.setGems(this.gems + gems), null, 'Buy more gems');
-    });
-
-    // Live score number (right-aligned)
-    this._scoreDisplay = this.scene.add.text(this._width - 14, cy, '0', {
+    // Score number centered
+    this._scoreDisplay = this.scene.add.text(this._width / 2, cy + 10, '0', {
       fontSize: STYLE.playerScoreFontSize,
-      color: '#ffee44',
+      color: '#ffffff',
       fontFamily: STYLE.fontFamily,
       fontStyle: 'bold',
       stroke: '#000000',
       strokeThickness: 3,
       shadow: { offsetX: 1, offsetY: 2, color: '#000000', blur: 6, fill: true },
-    }).setOrigin(1, 0.5);
+    }).setOrigin(0.5, 0.5);
     this.add(this._scoreDisplay);
   }
 
@@ -375,7 +343,7 @@ export default class ScoreBoard extends Phaser.GameObjects.Container {
       const obj = this._rowObjects[cat.key];
       if (!obj) return;
       const pts = this._pending[cat.key];
-      obj.btnLabel.setText(pts !== undefined ? String(pts) : '--');
+      obj.btnLabel.setText(pts !== undefined ? String(pts) : '');
       obj.btnLabel.setColor(pts !== undefined ? '#ffffff' : STYLE.textColor);
       this._drawBtn(obj.btnGfx, obj.btnX, obj.btnY, false, false, pts);
     });
@@ -391,6 +359,26 @@ export default class ScoreBoard extends Phaser.GameObjects.Container {
       this._bonusLabel.setText(upperTotal >= 63 ? '+50' : '0');
     } else {
       this._bonusLabel.setText(`${upperTotal}/63`);
+    }
+  }
+
+  _drawDiceFace(g, cx, cy, size, face) {
+    const half = size / 2;
+    const radius = size * 0.18;
+    const pipR = size * 0.11;
+    const offset = size * 0.28;
+    // Drop shadow
+    g.fillStyle(0x999999, 0.5);
+    g.fillRoundedRect(cx - half, cy - half + 3, size, size, radius);
+    // Body
+    g.fillStyle(0xffffff, 1);
+    g.fillRoundedRect(cx - half, cy - half, size, size, radius);
+    g.lineStyle(1.5, 0xaaaaaa, 1);
+    g.strokeRoundedRect(cx - half, cy - half, size, size, radius);
+    // Pips
+    g.fillStyle(0x222222, 1);
+    for (const [dx, dy] of PIP_POSITIONS[face]) {
+      g.fillCircle(cx + dx * offset, cy + dy * offset, pipR);
     }
   }
 

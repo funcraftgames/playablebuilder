@@ -7,7 +7,7 @@ const STYLE = {
   labelColor:      '#ffffff',
   fontSize:        '30px',
   fontStyle:       'bold',
-  fontFamily:      'DynaPuff, Arial, sans-serif',
+  fontFamily:      'MuseoSansRounded, Arial, sans-serif',
   uppercase:       true,
   width:           250,
   height:          50,
@@ -45,7 +45,7 @@ export default class MainButton extends Phaser.GameObjects.Container {
         fontSize:   STYLE.fontSize,
         color:      STYLE.labelColor,
         fontStyle:  STYLE.fontStyle,
-        fontFamily: 'DynaPuff, Arial, sans-serif',
+        fontFamily: 'MuseoSansRounded, Arial, sans-serif',
         stroke:     '#000000',
         strokeThickness: 3,
         shadow: {
