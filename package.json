@@ -12,8 +12,8 @@
     "dev:dice-yatzy": "node set-index.mjs dice-yatzy && vite",
     "build:ad:dice-yatzy": "node build-ad.mjs dice-yatzy",
     "new-game": "node new-game.mjs",
-    "dev:testgame": "node set-index.mjs testgame && vite",
-    "build:ad:testgame": "node build-ad.mjs testgame"
+    "dev:farkle-cards": "node set-index.mjs farkle-cards && vite",
+    "build:ad:farkle-cards": "node build-ad.mjs farkle-cards"
   },
   "keywords": [],
   "author": "",

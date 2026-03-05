@@ -1,0 +1,22 @@
+@import '../../shared/styles/fonts.css';
+
+:root {
+  --font-family-game: 'MuseoSansRounded', 'Arial', sans-serif;
+  --game-bg-color: #00895d;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0d2b1a;
+  background-image: linear-gradient(#00895d, #0d2b1a);
+  font-family: var(--font-family-game);
+  margin: 0;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+}
