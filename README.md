@@ -52,34 +52,37 @@ npm run dev:dice-yatzy
 
 ## Creating a New Game
 
+Run the scaffold command with your game's kebab-case name:
+
+```bash
+npm run new-game -- your-game-name
+```
+
+This generates the full game structure, creates the root HTML shell, and registers the dev/build scripts in `package.json` automatically:
+
+```
+src/games/your-game-name/
+├── main.js          # Entry point (store URLs, tap counter, loader, MRAID)
+├── GameScene.js     # Phaser scene ready to fill in
+├── styles/game.css  # Base CSS with CSS variables
+├── assets/          # Put images and audio here
+└── components/      # Put reusable Phaser objects here
+your-game-name.html  # Root HTML shell
+```
+
+After scaffolding, update the Apple and Google Play store URLs in `main.js`, then start developing:
+
+```bash
+npm run dev:your-game-name
+```
+
+> **Note:** Game names must be lowercase letters, numbers, and hyphens (e.g. `my-game`).
+
+### Manual setup (without the scaffolder)
+
 1. Create a folder under `src/games/<your-game>/`.
 2. Add a `main.js` entry point (import Phaser, configure scenes, handle store redirect and MRAID).
-3. Create a matching HTML shell at the root:
-
-   ```html
-   <!-- your-game.html -->
-   <!DOCTYPE html>
-   <html lang="en">
-     <head>
-       <meta charset="UTF-8" />
-       <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-       <title>Your Game</title>
-       <script>
-         function setVh() {
-           let vh = window.innerHeight * 0.01;
-           document.documentElement.style.setProperty('--vh', `${vh}px`);
-         }
-         window.addEventListener('resize', setVh);
-         window.addEventListener('orientationchange', setVh);
-         setVh();
-       </script>
-     </head>
-     <body>
-       <script type="module" src="/src/games/your-game/main.js"></script>
-     </body>
-   </html>
-   ```
-
+3. Create a matching HTML shell at the root (see any existing `.html` file for the pattern).
 4. Add dev and build scripts to `package.json`:
 
    ```json
