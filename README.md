@@ -78,6 +78,26 @@ npm run dev:your-game-name
 
 > **Note:** Game names must be lowercase letters, numbers, and hyphens (e.g. `my-game`).
 
+---
+
+## Cloning an Existing Game
+
+To create a new game based on an existing one, use the clone command:
+
+```bash
+npm run clone-game -- <source-game> <new-game>
+```
+
+For example, to clone `bingo-dice` into a new game called `bingo-deluxe`:
+
+```bash
+npm run clone-game -- bingo-dice bingo-deluxe
+```
+
+This copies the entire game directory, updates all internal path references, creates the root HTML shell, and registers the dev/build scripts in `package.json`.
+
+> **Note:** Game names must be lowercase letters, numbers, and hyphens (e.g. `my-game`).
+
 ### Manual setup (without the scaffolder)
 
 1. Create a folder under `src/games/<your-game>/`.
