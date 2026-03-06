@@ -31,6 +31,18 @@ playablebuilder/
 
 ## Prerequisites
 
+- **Node.js** (v18 or higher) — [Download](https://nodejs.org/)
+- **npm** (comes bundled with Node.js)
+
+To verify your installation:
+
+```bash
+node -v   # should print v18.x.x or higher
+npm -v    # should print 9.x.x or higher
+```
+
+Then install project dependencies:
+
 ```bash
 npm install
 ```
