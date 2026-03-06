@@ -1,0 +1,23 @@
+@import '../../shared/styles/fonts.css';
+
+:root {
+  --game-bg-color: #9ca9fe;
+  --font-family-game: 'MuseoSansRounded', sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #000;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  min-height: calc(var(--vh, 1vh) * 100);
+  margin: 0;
+  overflow-x: hidden;
+}

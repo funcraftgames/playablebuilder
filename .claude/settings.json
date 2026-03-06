@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node clone-game.mjs)",
+      "Bash(node clone-game.mjs nonexistent test-game)"
+    ]
+  }
+}
